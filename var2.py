@@ -7,43 +7,37 @@ import gurobipy as gp
 from gurobipy import GRB
 import sys
 
-# Number of TimeSlots required for each Course
-Courses, CourseRequirements = gp.multidict({
-    "C1":  2,
-    "C2":  2,
-    "C3":  2,
-    "C4":  2,
-    "C5":  2,
-    "C6":  2,
-    "C7":  2,
-    "C8":  2,
-    "C9":  2,
-    "C10": 2,
-    })
+import gurobipy as gp
+from gurobipy import GRB
+import sys
 
-# Amount each worker is paid to work one Course
-TimeSlots, weight = gp.multidict({
-        "T11":   1,
-        "T12":   1,
-        "T13":   1,
-        "T14":   1,
-        "T15":   1,
-        "T21":   1,
-        "T22":   1,
-        "T23":   1,
-        "T24":   1,
-        "T25":   1,
-        "T31":   1,
-        "T32":   1,
-        "T33":   1,
-        "T34":   1,
-        "T35":   1,
-        "T41":   1,
-        "T42":   1,
-        "T43":   1,
-        "T44":   1,
-        "T45":   1,
-    })
+# Number of TimeSlots required for each Course
+
+# for courses we use AFM courses in Uwaterloo
+course={}
+keys=range(83)
+values= range(1,84)
+for i in keys:
+    course['C'+str(values[i])]=1
+Courses, CourseRequirements = gp.multidict(course)
+
+#Timeslot: courses start form 830 to 530 form Monday to Friday. Duration of
+#class will be 80 mins
+TimeSlot_day=[]
+keys=range(6)
+values=range(1,7)
+for i in keys:
+    TimeSlot_day.append('T'+ str(values[i]))
+TimeSlot_week=[]
+for j in range(1,6):
+    for k in (range (len(TimeSlot_day))):
+        TimeSlot_week.append(TimeSlot_day[k]+str(j))
+TimeSlots={}
+for i in TimeSlot_week:
+    TimeSlots[i]=1
+TimeSlots, weight=gp.multidict(TimeSlots)
+
+
 
 Student, Course1, Course2 = gp.multidict({
     "S1":   ["C1", "C5"],
@@ -197,16 +191,16 @@ Rooms = []
 
 Classroom = []
 
-for r in range(2):
-    for t in range(4):
+for r in range(16):
+    for t in range(6):
         for d in range(5):
             rs = r + 1
             ts = t + 1
             ds = d + 1
-            string1 = 'R' + str(rs)
+            string1 = 'R' + str(r)
             string2 = str(ts) + str(ds)
             Classroom.append((string1,string2))
-print(Classroom)
+
 def filters(a,b):
     c = a + b
     return c
@@ -216,7 +210,9 @@ def incl(a):
         return 'R2'
     if a[1] == '2':
         return 'R1'
-
+    if a[1] == '3':
+        return 'R3'
+    
 availability2 = [(filters(c1,c2)) for c1 in Timeslot_Class
                 for c2 in Classroom
                 if c1[0][1:3] == c2[1]]
@@ -298,4 +294,3 @@ if status != GRB.INF_OR_UNBD and status != GRB.INFEASIBLE:
         for c in m.getConstrs():
             if c.IISConstr:
                 print('%s' % c.constrName)
-    
